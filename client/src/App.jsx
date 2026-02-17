@@ -53,9 +53,9 @@ const App = () => {
     setHasSearched(true);
 
     try {
-      const filtersStr = [...activeFilters].join(', ') || 'any';
+      // const filtersStr = [...activeFilters].join(', ') || 'any';
       const res = await axios.get(`${API_BASE_URL}/jobs`, {
-        params: { query: search || 'Node.js MERN Stack', filters: filtersStr }
+        params: { query: search || 'Node.js MERN Stack' }
       });
       setJobs(res.data.jobs || []);
       setServingSource(res.data.source || '');
@@ -142,13 +142,13 @@ const App = () => {
           </button>
         </div>
 
-        <div className="filters">
+        {/* <div className="filters">
           {Object.entries(filterLabels).map(([key, label]) => (
             <div key={key} className={`chip ${activeFilters.has(key) ? 'on' : ''}`} onClick={() => toggleFilter(key)}>
               {label}
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
 
       {/* STATS BAR */}
@@ -303,12 +303,12 @@ const App = () => {
                       </p>
                     </div>
 
-                    <div style={{ textAlign: 'center', margin: '20px 0', position: 'relative' }}>
+                    {/* <div style={{ textAlign: 'center', margin: '20px 0', position: 'relative' }}>
                       <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0' }} />
                       <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#fff', padding: '0 10px', fontSize: '.7rem', color: '#94a3b8', fontWeight: 600 }}>OR QUICK APPLY</span>
-                    </div>
+                    </div> */}
 
-                    <form onSubmit={handleApplySubmit}>
+                    {/* <form onSubmit={handleApplySubmit}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div className="fg"><label>First Name</label><input type="text" placeholder="Arjun" required /></div>
                         <div className="fg"><label>Last Name</label><input type="text" placeholder="Sharma" required /></div>
@@ -337,7 +337,7 @@ const App = () => {
                       <button type="submit" className="sub-btn">
                         <Send size={16} /> Submit Application
                       </button>
-                    </form>
+                    </form> */}
                   </>
                 ) : (
                   <div style={{ textAlign: 'center', padding: '8px 0' }}>

@@ -1,13 +1,12 @@
 const {
     fetchAdzuna,
-    fetchArbeitnow,
     fetchRemotive,
     fetchTheMuse,
     fetchJSearch
 } = require("./providers");
 
 const { rankJobs } = require("./aiRanker");
-const { setCache, getCache } = require("./cache");
+// const { setCache, getCache } = require("./cache");
 
 const deduplicate = (jobs) => {
     const seen = new Set();
@@ -20,25 +19,30 @@ const deduplicate = (jobs) => {
 };
 
 const searchJobs = async (query, location) => {
-    const cacheKey = `${query}-${location}`;
-    const cached = getCache(cacheKey);
-    if (cached) return cached;
+    // const cacheKey = `${query}-${location}`;
+    // const cached = getCache(cacheKey);
+    // if (cached) return cached;
 
     const results = await Promise.allSettled([
         fetchAdzuna(query, location),
-        fetchArbeitnow(query),
-        fetchRemotive(query),
-        fetchTheMuse(query),
-        // fetchJSearch(query, location)
+        // fetchArbeitnow(query),
+        // fetchRemotive(query),
+        // fetchTheMuse(query),
+        fetchJSearch(query, location)
     ]);
 
     let jobs = [];
 
-    results.forEach((r) => {
+    results.forEach((r, i) => {
         if (r.status === "fulfilled") {
+            console.log(`Provider ${i} returned ${r.value.length} jobs`);
             jobs.push(...r.value);
+        } else {
+            console.error(`Provider ${i} failed:`, r.reason);
         }
     });
+
+    console.log(`Total raw jobs fetched: ${jobs.length}`);
 
     if (!jobs.length) return [];
 
@@ -78,11 +82,13 @@ const searchJobs = async (query, location) => {
         return matchesStack && matchesLocation && matchesType;
     });
 
+    console.log(`Jobs remaining after filter: ${jobs.length}`);
+
     jobs = deduplicate(jobs);
 
     const ranked = await rankJobs(jobs, query);
 
-    setCache(cacheKey, ranked, 300);
+    // setCache(cacheKey, ranked, 300);
 
     return ranked;
 };

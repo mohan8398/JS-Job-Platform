@@ -40,9 +40,10 @@ const fetchAdzuna = async (query, location) => {
             params: {
                 app_id: process.env.ADZUNA_APP_ID,
                 app_key: process.env.ADZUNA_APP_KEY,
-                results_per_page: 10,
+                results_per_page: 50,
                 what: query,
-                where: location
+                where: location,
+                max_days_old: 7
             }
         }
     );
@@ -52,23 +53,6 @@ const fetchAdzuna = async (query, location) => {
     );
 };
 
-//////////////////////////////////////////////////////
-// 2️⃣ Arbeitnow
-//////////////////////////////////////////////////////
-
-const fetchArbeitnow = async (query) => {
-    const res = await axios.get(
-        "https://www.arbeitnow.com/api/job-board-api"
-    );
-
-    const filtered = res.data.data.filter(j =>
-        j.title.toLowerCase().includes(query.toLowerCase())
-    );
-
-    return filtered.slice(0, 10).map((j, i) =>
-        normalize(j, "arbeitnow", i)
-    );
-};
 
 //////////////////////////////////////////////////////
 // 3️⃣ Remotive (Remote Jobs API)
@@ -129,7 +113,9 @@ const fetchJSearch = async (query, location) => {
             params: {
                 query: `${query} in ${location}`,
                 page: "1",
-                num_pages: "1"
+                num_pages: "1",
+                country: 'India',
+                date_posted: 'week'
             },
             headers: {
                 "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
@@ -137,7 +123,7 @@ const fetchJSearch = async (query, location) => {
             }
         }
     );
-
+    // console.log('JSearch', res.data);
     return res.data.data.slice(0, 10).map((j, i) =>
         normalize(
             {
@@ -158,7 +144,6 @@ const fetchJSearch = async (query, location) => {
 
 module.exports = {
     fetchAdzuna,
-    fetchArbeitnow,
     fetchRemotive,
     fetchTheMuse,
     fetchJSearch

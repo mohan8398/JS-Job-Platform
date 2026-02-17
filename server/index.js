@@ -22,10 +22,10 @@ app.use(express.json());
 app.get("/api/jobs", async (req, res) => {
   try {
     const query = req.query.query || "Node.js MERN Stack";
-    const location = req.query.location || "Bengaluru, Remote";
+    const location = req.query.location || "Bengaluru";
 
     const jobs = await searchJobs(query, location);
-
+    console.log(jobs);
     res.json({
       timestamp: new Date().toISOString(),
       total: jobs.length,
