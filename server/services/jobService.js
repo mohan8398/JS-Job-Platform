@@ -8,6 +8,8 @@ const {
 const { rankJobs } = require("./aiRanker");
 // const { setCache, getCache } = require("./cache");
 
+const JobCache = require("../models/JobCache");
+
 const deduplicate = (jobs) => {
     const seen = new Set();
     return jobs.filter(job => {
@@ -19,15 +21,23 @@ const deduplicate = (jobs) => {
 };
 
 const searchJobs = async (query, location) => {
-    // const cacheKey = `${query}-${location}`;
-    // const cached = getCache(cacheKey);
-    // if (cached) return cached;
+    // Check MongoDB Cache first
+    try {
+        const cached = await JobCache.findOne({
+            query: query.toLowerCase(),
+            location: location.toLowerCase(),
+            expiresAt: { $gt: new Date() }
+        });
+        if (cached) {
+            console.log("⚡ Serving from MongoDB Cache");
+            return cached.jobs;
+        }
+    } catch (err) {
+        console.error("Cache Read Error:", err.message);
+    }
 
     const results = await Promise.allSettled([
         fetchAdzuna(query, location),
-        // fetchArbeitnow(query),
-        // fetchRemotive(query),
-        // fetchTheMuse(query),
         fetchJSearch(query, location)
     ]);
 
@@ -72,11 +82,7 @@ const searchJobs = async (query, location) => {
         const matchesLocation = isRemote || isBengaluru;
 
         // Type Check (Strict Full-time)
-        // If it explicitly says internship or part-time, reject. Otherwise, look for full-time or assume.
         const isRejectedType = title.includes('intern') || title.includes('part-time') || title.includes('parttime');
-        const isExplicitFullTime = title.includes('full-time') || title.includes('fulltime') || desc.includes('full-time') || desc.includes('fulltime');
-
-        // We'll be slightly lenient if it doesn't say "part-time", but prioritize explicit full-time
         const matchesType = !isRejectedType;
 
         return matchesStack && matchesLocation && matchesType;
@@ -88,7 +94,20 @@ const searchJobs = async (query, location) => {
 
     const ranked = await rankJobs(jobs, query);
 
-    // setCache(cacheKey, ranked, 300);
+    // Update MongoDB Cache (Expire in 15 minutes)
+    try {
+        await JobCache.findOneAndUpdate(
+            { query: query.toLowerCase(), location: location.toLowerCase() },
+            {
+                jobs: ranked,
+                expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+            },
+            { upsert: true }
+        );
+        console.log("💾 Cache updated in MongoDB");
+    } catch (err) {
+        console.error("Cache Write Error:", err.message);
+    }
 
     return ranked;
 };

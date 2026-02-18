@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Search, MapPin, Clock, Briefcase, FileText, Send, Sparkles, Loader2, ArrowUpRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 
 const LOGO_COLORS = [
   { lc: '#635bff', lb: '#f0eeff' }, { lc: '#059669', lb: '#ecfdf5' }, { lc: '#2563eb', lb: '#eff6ff' },

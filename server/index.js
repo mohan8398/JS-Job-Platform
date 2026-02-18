@@ -1,22 +1,41 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
+const helmet = require("helmet");
+const compression = require("compression");
+const rateLimit = require("express-rate-limit");
+const mongoose = require("mongoose");
 const path = require("path");
 const cron = require("node-cron");
 require("dotenv").config();
 
 const { searchJobs } = require("./services/jobService");
+const AppliedJob = require("./models/AppliedJob");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const APPLIED_JOBS_FILE = path.join(__dirname, 'applied_jobs.json');
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/findj";
 
-if (!fs.existsSync(APPLIED_JOBS_FILE)) {
-  fs.writeFileSync(APPLIED_JOBS_FILE, JSON.stringify([], null, 2));
-}
+// Connect to MongoDB
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("📦 Connected to MongoDB"))
+  .catch(err => console.error("❌ MongoDB connection error:", err));
 
+app.use(helmet());
+app.use(compression());
 app.use(cors());
 app.use(express.json());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+app.use("/api/", limiter);
+
+// Health Check
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
 
 // API Route
 app.get("/api/jobs", async (req, res) => {
@@ -25,7 +44,6 @@ app.get("/api/jobs", async (req, res) => {
     const location = req.query.location || "Bengaluru";
 
     const jobs = await searchJobs(query, location);
-    console.log(jobs);
     res.json({
       timestamp: new Date().toISOString(),
       total: jobs.length,
@@ -39,33 +57,28 @@ app.get("/api/jobs", async (req, res) => {
   }
 });
 
-// Applied Jobs Storage
-app.post('/api/apply', (req, res) => {
+// Applied Jobs Storage (MongoDB)
+app.post('/api/apply', async (req, res) => {
   try {
-    const job = { ...req.body, appliedAt: new Date().toISOString() };
-    let applied = JSON.parse(fs.readFileSync(APPLIED_JOBS_FILE, 'utf8') || '[]');
-    applied.push(job);
-    fs.writeFileSync(APPLIED_JOBS_FILE, JSON.stringify(applied, null, 2));
+    const job = new AppliedJob({ ...req.body });
+    await job.save();
     res.status(201).json(job);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-app.get('/api/applied', (req, res) => {
+app.get('/api/applied', async (req, res) => {
   try {
-    res.json(JSON.parse(fs.readFileSync(APPLIED_JOBS_FILE, 'utf8') || '[]'));
+    const applied = await AppliedJob.find().sort({ appliedAt: -1 });
+    res.json(applied);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-////////////////////////////////////////////////////////////
-// Background Cron Refresh (Every 15 minutes)
-////////////////////////////////////////////////////////////
-
 cron.schedule("*/15 * * * *", async () => {
-  console.log("🔄 Background refresh running for MERN/Node Bengalury...");
+  console.log("🔄 Background refresh running for MERN/Node Bengaluru...");
   try {
     await searchJobs("Node.js MERN Stack", "Bengaluru, Remote");
     console.log("✅ Cache refreshed for MERN/Node Stack");
