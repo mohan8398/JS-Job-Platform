@@ -83,7 +83,10 @@ const searchJobs = async (query, location) => {
 
         // Type Check (Strict Full-time)
         const isRejectedType = title.includes('intern') || title.includes('part-time') || title.includes('parttime');
-        const matchesType = !isRejectedType;
+        const isExplicitFullTime = title.includes('full-time') || title.includes('fulltime') || desc.includes('full-time') || desc.includes('fulltime');
+
+        // We'll be slightly lenient if it doesn't say "part-time", but prioritize explicit full-time
+        const matchesType = !isRejectedType || isExplicitFullTime;
 
         return matchesStack && matchesLocation && matchesType;
     });

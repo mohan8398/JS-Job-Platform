@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Search, MapPin, Clock, Briefcase, FileText, Send, Sparkles, Loader2, ArrowUpRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
 const LOGO_COLORS = [
   { lc: '#635bff', lb: '#f0eeff' }, { lc: '#059669', lb: '#ecfdf5' }, { lc: '#2563eb', lb: '#eff6ff' },
@@ -107,7 +107,7 @@ const App = () => {
       <nav>
         <div className="logo">
           <div className="logo-icon">N</div>
-          <span className="logo-text">Node</span>
+          <span className="logo-text">Node Jobs</span>
         </div>
         <div className="nav-badge"><span className="live-dot"></span> AI-Powered Live Search</div>
         <div className="nav-right">
@@ -118,16 +118,16 @@ const App = () => {
 
       {/* HERO */}
       <div className="hero">
-        <div className="pill"><span className="pill-dot"></span> Real-time AI Job Search</div>
-        <h1>Find live <span className="hl">Node.js openings</span></h1>
-        <p className="hero-p">AI searches and generates real-time job</p>
+        <div className="pill"><span className="pill-dot"></span> AI Job Search</div>
+        <h1>Find <span className="hl">JS Openings</span></h1>
+        <p className="hero-p">AI searches and generates job</p>
 
         <div className="search-wrap">
           <div className="sfield">
             <Search size={16} />
             <input
               type="text"
-              placeholder="e.g. Senior Node.js engineer, remote, TypeScript…"
+              placeholder="e.g. Senior Node.js engineer, TypeScript…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && doSearch()}
@@ -162,7 +162,7 @@ const App = () => {
           ) : hasSearched ? (
             <><b>{jobs.length}</b> roles found · Filters: <b>{[...activeFilters].join(' · ') || 'none'}</b> · <span style={{ color: 'var(--green)', fontWeight: 700 }}>✓ AI-generated results</span></>
           ) : (
-            <>Search for Node.js jobs above to get <b>AI-generated live results</b></>
+            <>Search for Node.js jobs above to get <b>AI-generated results</b></>
           )}
         </div>
         <div className="ai-badge">
